@@ -1,0 +1,11 @@
+{
+  "name": "financial-dashboard",
+  "version": "1.0.0",
+  "description": "Test dashboard for test on render",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
