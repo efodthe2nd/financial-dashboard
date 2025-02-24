@@ -6,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
-const API_KEY = 'your-secret-api-key'; // Must match EA's api_key
+const API_KEY = 'your-secret-api-key'; // Replace with the EXACT key from your EA
 
 const db = new sqlite3.Database('./mt4_data.db', (err) => {
   if (err) console.error('Database error:', err);
@@ -25,16 +25,20 @@ db.run(`
 
 const authenticate = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
+  console.log('Received API Key:', apiKey); // Log for debugging
   if (!apiKey || apiKey !== API_KEY) {
+    console.log('Authentication failed. Expected:', API_KEY);
     return res.status(401).json({ error: 'Unauthorized' });
   }
   next();
 };
 
 app.post('/api/trades', authenticate, (req, res) => {
+  console.log('POST Received:', req.body); // Log incoming data
   const { account_number, balance, equity, profit } = req.body;
 
   if (!account_number || balance === undefined || equity === undefined || profit === undefined) {
+    console.log('Bad Request - Invalid data:', req.body);
     return res.status(400).json({ error: 'Missing or invalid required fields' });
   }
 
@@ -43,8 +47,10 @@ app.post('/api/trades', authenticate, (req, res) => {
     [account_number, parseFloat(balance), parseFloat(equity), parseFloat(profit)],
     function (err) {
       if (err) {
+        console.log('Database error:', err);
         return res.status(500).json({ error: 'Database error' });
       }
+      console.log('Data saved with ID:', this.lastID);
       res.status(201).json({ message: 'Account data saved', id: this.lastID });
     }
   );
@@ -53,8 +59,10 @@ app.post('/api/trades', authenticate, (req, res) => {
 app.get('/api/trades', (req, res) => {
   db.all('SELECT * FROM account_data', [], (err, rows) => {
     if (err) {
+      console.log('GET error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
+    console.log('GET response:', rows);
     res.json(rows);
   });
 });
