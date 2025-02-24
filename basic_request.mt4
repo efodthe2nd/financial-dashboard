@@ -1,0 +1,50 @@
+#property strict
+#include <stdlib.mqh>
+// #include <json.mqh>  // Uncomment if you have this library; otherwise, we'll build JSON manually
+
+extern string server_url = "https://financial-dashboard-ln43.onrender.com"; // Replace with your Render URL
+extern string api_key = "your-secret-api-key"
+extern int update_interval_seconds = 60;
+
+int OnInit() {
+   EventSetTimer(update_interval_seconds);
+   // Test the connection right away
+   SendDataToServer();
+   return(INIT_SUCCEEDED);
+}
+
+void OnDeinit(const int reason) {
+   EventKillTimer();
+}
+
+void OnTimer() {
+   SendDataToServer();
+}
+
+void SendDataToServer() {
+   // Collect account data
+   double balance = AccountBalance();
+   double equity = AccountEquity();
+   double profit = AccountProfit();
+   
+   // Format as JSON manually (no external library needed)
+   string json_data = "{\"account_number\":\"" + IntegerToString(AccountNumber()) + 
+                      "\",\"balance\":" + DoubleToString(balance, 2) + 
+                      ",\"equity\":" + DoubleToString(equity, 2) + 
+                      ",\"profit\":" + DoubleToString(profit, 2) + "}";
+   
+   // Prepare data for WebRequest
+   char data[];
+   StringToCharArray(json_data, data);
+   
+   char result[];
+   string headers = "Content-Type: application/json\r\nx-api-key: " + api_key + "\r\n";
+   
+   int res = WebRequest("POST", server_url, headers, NULL, 5000, data, ArraySize(data), result, NULL);
+   
+   if (res == -1) {
+      Print("Error in WebRequest. Error code: ", GetLastError());
+   } else {
+      Print("Data sent successfully: ", CharArrayToString(result));
+   }
+}
