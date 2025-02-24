@@ -50,6 +50,15 @@ app.post('/api/trades', authenticate, (req, res) => {
   );
 });
 
+app.get('/api/trades', (req, res) => {
+  db.all('SELECT * FROM account_data', [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(rows);
+  });
+});
+
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
