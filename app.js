@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const app = express();
 
 // Connect to database
-mongoose.connect('mongodb://localhost/mt4dashboard');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/mt4dashboard');
 
 // Create schema for MT4 account data
 const accountDataSchema = new mongoose.Schema({
