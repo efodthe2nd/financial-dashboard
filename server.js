@@ -1,4 +1,3 @@
-// In server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
@@ -7,7 +6,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 app.use(bodyParser.json());
 
-const API_KEY = 'your-secret-api-key'; // Must match the EA's api_key
+const API_KEY = 'your-secret-api-key'; // Must match EA's api_key
 
 const db = new sqlite3.Database('./mt4_data.db', (err) => {
   if (err) console.error('Database error:', err);
@@ -35,13 +34,13 @@ const authenticate = (req, res, next) => {
 app.post('/api/trades', authenticate, (req, res) => {
   const { account_number, balance, equity, profit } = req.body;
 
-  if (!account_number || !balance || !equity || !profit) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!account_number || balance === undefined || equity === undefined || profit === undefined) {
+    return res.status(400).json({ error: 'Missing or invalid required fields' });
   }
 
   db.run(
     'INSERT INTO account_data (account_number, balance, equity, profit) VALUES (?, ?, ?, ?)',
-    [account_number, balance, equity, profit],
+    [account_number, parseFloat(balance), parseFloat(equity), parseFloat(profit)],
     function (err) {
       if (err) {
         return res.status(500).json({ error: 'Database error' });
@@ -49,14 +48,6 @@ app.post('/api/trades', authenticate, (req, res) => {
       res.status(201).json({ message: 'Account data saved', id: this.lastID });
     }
   );
-});
-
-// Optional: Check data
-app.get('/api/trades', (req, res) => {
-  db.all('SELECT * FROM account_data', [], (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(rows);
-  });
 });
 
 app.listen(port, () => {
